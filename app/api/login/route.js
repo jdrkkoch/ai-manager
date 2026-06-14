@@ -2,6 +2,9 @@ import { prisma } from '@/lib/prisma';
 import { generateToken, setAuthCookie } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 
+// Disable static generation for this API route
+export const dynamic = 'force-dynamic';
+
 export async function POST(request) {
   try {
     const { username, password } = await request.json();

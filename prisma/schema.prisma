@@ -1,11 +1,12 @@
 // Prisma schema for AI Assistant multi-user app
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 // User model for authentication
