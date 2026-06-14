@@ -9,9 +9,9 @@ export default function Home() {
 
   useEffect(() => {
     setMounted(true);
-    const isLoggedIn = localStorage.getItem("isLoggedIn");
+    const token = localStorage.getItem("auth_token");
     
-    if (isLoggedIn === "true") {
+    if (token) {
       router.replace("/dashboard");
     } else {
       router.replace("/login");

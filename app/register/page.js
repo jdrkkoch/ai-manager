@@ -4,9 +4,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-export default function Login() {
+export default function Register() {
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -27,13 +29,25 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    // Client validation
+    if (password !== passwordConfirm) {
+      setError("Hasła się nie zgadzają");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Hasło musi mieć co najmniej 6 znaków");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const response = await fetch("/api/login", {
+      const response = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, email, password, passwordConfirm }),
       });
 
       const data = await response.json();
@@ -42,7 +56,7 @@ export default function Login() {
         localStorage.setItem("auth_token", data.token);
         router.push("/dashboard");
       } else {
-        setError(data.error || "Nieprawidłowy login lub hasło");
+        setError(data.error || "Rejestracja nie powiodła się");
       }
     } catch (err) {
       console.error(err);
@@ -57,7 +71,7 @@ export default function Login() {
     return (
       <div className="auth-wrapper" style={{ flexDirection: "column", gap: "1rem" }}>
         <div className="spinner"></div>
-        <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>Sprawdzanie sesji...</p>
+        <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>Ładowanie...</p>
       </div>
     );
   }
@@ -65,8 +79,8 @@ export default function Login() {
   return (
     <div className="auth-wrapper">
       <div className="auth-card">
-        <h2 className="auth-title">Panel osobisty</h2>
-        <p className="auth-subtitle">Zaloguj się, aby uzyskać dostęp</p>
+        <h2 className="auth-title">Rejestracja</h2>
+        <p className="auth-subtitle">Utwórz nowe konto</p>
 
         <form onSubmit={handleSubmit} className="auth-form">
           {error && <div className="auth-error">{error}</div>}
@@ -84,7 +98,22 @@ export default function Login() {
               onChange={(e) => setUsername(e.target.value)}
               required
               disabled={loading}
-              autoComplete="username"
+            />
+          </div>
+
+          <div className="input-group">
+            <label className="input-label" htmlFor="email">
+              Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              className="auth-input"
+              placeholder="twoj@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={loading}
             />
           </div>
 
@@ -101,17 +130,32 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={loading}
-              autoComplete="current-password"
+            />
+          </div>
+
+          <div className="input-group">
+            <label className="input-label" htmlFor="passwordConfirm">
+              Potwierdź hasło
+            </label>
+            <input
+              type="password"
+              id="passwordConfirm"
+              className="auth-input"
+              placeholder="••••••••"
+              value={passwordConfirm}
+              onChange={(e) => setPasswordConfirm(e.target.value)}
+              required
+              disabled={loading}
             />
           </div>
 
           <button type="submit" className="auth-btn" disabled={loading}>
-            {loading ? "Logowanie..." : "Zaloguj się"}
+            {loading ? "Rejestracja..." : "Zarejestruj się"}
           </button>
         </form>
 
         <p style={{ textAlign: "center", marginTop: "1rem", color: "var(--text-secondary)" }}>
-          Nie masz konta? <Link href="/register" style={{ color: "var(--accent-blue)", textDecoration: "none" }}>Zarejestruj się</Link>
+          Masz już konto? <Link href="/login" style={{ color: "var(--accent-blue)", textDecoration: "none" }}>Zaloguj się</Link>
         </p>
       </div>
     </div>

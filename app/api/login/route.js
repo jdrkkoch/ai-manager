@@ -1,36 +1,55 @@
+import { prisma } from '@/lib/prisma';
+import { generateToken, setAuthCookie } from '@/lib/auth';
+import bcrypt from 'bcryptjs';
+
 export async function POST(request) {
   try {
     const { username, password } = await request.json();
 
-    // Get credentials from environment variables (REQUIRED)
-    // Note: Using ADMIN_USERNAME (not NEXT_PUBLIC_) because this is server-side only
-    const validUsername = process.env.ADMIN_USERNAME;
-    const validPassword = process.env.ADMIN_PASSWORD;
-
-    // Check if environment variables are set
-    if (!validUsername || !validPassword) {
-      console.error("❌ Missing environment variables: ADMIN_USERNAME or ADMIN_PASSWORD");
-      return new Response(JSON.stringify({ success: false, error: "Server configuration error" }), {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      });
+    if (!username || !password) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Username and password required' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
-    if (username === validUsername && password === validPassword) {
-      return new Response(JSON.stringify({ success: true }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
-    return new Response(JSON.stringify({ success: false, error: "Incorrect login or password" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
+    // Find user by username
+    const user = await prisma.user.findUnique({
+      where: { username },
     });
+
+    if (!user) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Incorrect login or password' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Incorrect login or password' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Generate token
+    const token = generateToken(user.id);
+
+    // Set cookie and return token
+    const response = new Response(
+      JSON.stringify({ success: true, token, userId: user.id }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+
+    setAuthCookie(response, token);
+    return response;
   } catch (error) {
-    return new Response(JSON.stringify({ success: false, error: "Invalid request payload" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
+    console.error('Login error:', error);
+    return new Response(
+      JSON.stringify({ success: false, error: 'Internal server error' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 }

@@ -34,8 +34,8 @@ export default function Dashboard() {
   // 1. Session check and hydration
   useEffect(() => {
     setMounted(true);
-    const isLoggedIn = localStorage.getItem("isLoggedIn");
-    if (isLoggedIn !== "true") {
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
       router.replace("/login");
     } else {
       setCheckingAuth(false);
@@ -189,7 +189,7 @@ export default function Dashboard() {
 
   // Handle logout
   const handleLogout = () => {
-    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("auth_token");
     router.replace("/login");
   };
 
