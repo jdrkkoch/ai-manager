@@ -3,12 +3,13 @@ export async function POST(request) {
     const { username, password } = await request.json();
 
     // Get credentials from environment variables (REQUIRED)
-    const validUsername = process.env.NEXT_PUBLIC_ADMIN_USERNAME;
+    // Note: Using ADMIN_USERNAME (not NEXT_PUBLIC_) because this is server-side only
+    const validUsername = process.env.ADMIN_USERNAME;
     const validPassword = process.env.ADMIN_PASSWORD;
 
     // Check if environment variables are set
     if (!validUsername || !validPassword) {
-      console.error("❌ Missing environment variables: NEXT_PUBLIC_ADMIN_USERNAME or ADMIN_PASSWORD");
+      console.error("❌ Missing environment variables: ADMIN_USERNAME or ADMIN_PASSWORD");
       return new Response(JSON.stringify({ success: false, error: "Server configuration error" }), {
         status: 500,
         headers: { "Content-Type": "application/json" },
